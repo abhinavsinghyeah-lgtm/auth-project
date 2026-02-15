@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>User Dashboard</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', sans-serif;
+      background: #111827;
+      color: white;
+    }
+
+    .navbar {
+      padding: 20px;
+      background: #1f2937;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .logout {
+      padding: 8px 15px;
+      background: #ef4444;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      color: white;
+      font-weight: bold;
+    }
+
+    .container {
+      padding: 40px;
+    }
+
+    .card {
+      background: #1f2937;
+      padding: 30px;
+      border-radius: 15px;
+      margin-bottom: 20px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.4);
+    }
+
+    /* AUTH SCREEN */
+
+    .auth-screen {
+      position: fixed;
+      inset: 0;
+      background: #111827;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .auth-box {
+      background: #1f2937;
+      padding: 40px;
+      border-radius: 20px;
+      text-align: center;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+      transition: 0.4s ease;
+    }
+
+    .auth-success {
+      background: #065f46 !important;
+    }
+
+    .auth-box h2 {
+      margin-bottom: 10px;
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- AUTH CHECK SCREEN -->
+  <div id="authScreen" class="auth-screen">
+    <div class="auth-box">
+      <h2 id="authTitle">Authentication Checking...</h2>
+      <p id="authDesc">Verifying your access and permissions.</p>
+    </div>
+  </div>
+
+  <!-- REAL CONTENT -->
+  <div id="realContent" style="display: none;">
+
+    <div class="navbar">
+      <h2>User Dashboard</h2>
+      <button class="logout" onclick="logout()">Logout</button>
+    </div>
+
+    <div class="container">
+      <div class="card">
+        <h3>Welcome</h3>
+        <p id="username">Loading...</p>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    const token = localStorage.getItem("token");
+
+    const authScreen = document.getElementById("authScreen");
+    const realContent = document.getElementById("realContent");
+    const authTitle = document.getElementById("authTitle");
+    const authDesc = document.getElementById("authDesc");
+    const authBox = document.querySelector(".auth-box");
+
+    function logout() {
+      localStorage.removeItem("token");
+      window.location.href = "login.html";
+    }
+
+    async function checkAuth() {
+
+      if (!token) {
+        window.location.href = "login.html";
+        return;
+      }
+
+      const payload = JSON.parse(atob(token.split('.')[1]));
+
+      // 🔴 Only allow USER role here
+      if (payload.role !== "user") {
+        window.location.href = "admin.html";
+        return;
+      }
+
+      try {
+        const res = await fetch("/profile", {
+          headers: { "Authorization": token }
+        });
+
+        const data = await res.json();
+
+        if (!data.username) {
+          throw new Error();
+        }
+
+        // SUCCESS
+        authTitle.innerText = "You are Authenticated";
+        authDesc.innerText = "Loading your dashboard...";
+        authBox.classList.add("auth-success");
+
+        document.getElementById("username").innerText =
+          "Username: " + data.username;
+
+        setTimeout(() => {
+          authScreen.style.display = "none";
+          realContent.style.display = "block";
+        }, 1000);
+
+      } catch {
+        localStorage.removeItem("token");
+        window.location.href = "login.html";
+      }
+    }
+
+    checkAuth();
+    window.addEventListener("storage", function(event) {
+  if (event.key === "token") {
+    location.reload();
+  }
+});
+
+  </script>
+
+</body>
+</html>
