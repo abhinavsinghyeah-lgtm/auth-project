@@ -1,3 +1,5 @@
+const cookieParser = require("cookie-parser");
+const Overview = require("./models/Overview");
 const Whitelist = require("./models/Whitelist");
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
@@ -10,20 +12,26 @@ const app = express();
 app.use(cors());
 
 app.use(express.json());
+app.use(cookieParser());
 app.use(express.static("public"));
 
 mongoose.connect(process.env.MONGO_URI)
 .then(async () => {
   console.log("Database connected");
 
-  // Auto whitelist default admin
-  const defaultAdmin = "architect";
-
-  const exists = await Whitelist.findOne({ username: defaultAdmin });
+  const exists = await Overview.findOne();
 
   if (!exists) {
-    await new Whitelist({ username: defaultAdmin }).save();
-    console.log("Default admin whitelisted:", defaultAdmin);
+    await Overview.create({
+      totalUsers: 0,
+      revenue: 92000,
+      expenses: 45000,
+      profit: 47000,
+      revenueGraph: [10000,15000,18000,22000,27000],
+      profitGraph: [5000,7000,9000,11000,14000]
+    });
+
+    console.log("Overview seeded");
   }
 
 })
@@ -34,8 +42,9 @@ mongoose.connect(process.env.MONGO_URI)
 
 
 
+
 function authMiddleware(req, res, next) {
-  const token = req.headers.authorization;
+const token = req.cookies.token;
 
   if (!token) {
     return res.status(401).send("No token provided");
@@ -138,10 +147,15 @@ app.post("/login", async (req, res) => {
       { expiresIn: "1h" }
     );
 
-    res.json({
-      message: "Login successful",
-      token: token
-    });
+res.cookie("token", token, {
+  httpOnly: true,
+  secure: false, // true in production (https)
+  sameSite: "strict",
+  maxAge: 60 * 60 * 1000 // 1 hour
+});
+
+res.json({ message: "Login successful" });
+
 
   } catch (err) {
     console.log(err);
@@ -233,4 +247,30 @@ app.delete("/admin/user/:id", authMiddleware, adminMiddleware, async (req, res) 
   } catch (err) {
     res.status(500).send("Server error");
   }
+});
+
+app.get("/api/overview", authMiddleware, async (req, res) => {
+  try {
+    const overview = await Overview.findOne();
+
+    if (!overview) {
+      return res.status(404).json({ message: "Overview not found" });
+    }
+
+    res.json(overview);
+
+  } catch (err) {
+    res.status(500).json({ message: "Server error" });
+  }
+});
+app.get("/admin", authMiddleware, adminMiddleware, (req, res) => {
+  res.sendFile(__dirname + "/public/admin.html");
+});
+app.post("/logout", (req, res) => {
+  res.clearCookie("token");
+  res.json({ message: "Logged out" });
+});
+fetch("/logout", { method: "POST" })
+.then(() => {
+  window.location.href = "/login.html";
 });
