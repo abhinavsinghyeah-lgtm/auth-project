@@ -16,11 +16,52 @@ app.use(cors({
 }));
 
 
+
 app.use(express.json());
 app.use(cookieParser());
-app.use(express.static("public", {
-  index: false
-}));
+
+app.get("/login.html", (req, res) => {
+
+  const token = req.cookies.token;
+
+  if (token) {
+    try {
+      jwt.verify(token, process.env.JWT_SECRET);
+      return res.redirect("/admin");
+    } catch {}
+  }
+
+  res.sendFile(path.join(__dirname, "public/login.html"));
+});
+app.get("/index.html", (req, res) => {
+
+  const token = req.cookies.token;
+
+  if (token) {
+    try {
+      jwt.verify(token, process.env.JWT_SECRET);
+      return res.redirect("/admin");
+    } catch {}
+  }
+
+  res.sendFile(path.join(__dirname, "public/index.html"));
+});
+
+app.get("/", (req, res) => {
+
+  const token = req.cookies.token;
+
+  if (token) {
+    try {
+      jwt.verify(token, process.env.JWT_SECRET);
+      return res.redirect("/admin");
+    } catch {}
+  }
+
+  res.sendFile(path.join(__dirname, "public/index.html"));
+});
+app.use(express.static("public", { index: false }));
+
 
 mongoose.connect(process.env.MONGO_URI)
 .then(async () => {
@@ -44,10 +85,6 @@ mongoose.connect(process.env.MONGO_URI)
 })
 .catch((error) => {
   console.log("Connection error:", error);
-});
-
-app.get("/", (req, res) => {
-  res.sendFile(path.join(__dirname, "public/index.html"));
 });
 
 
