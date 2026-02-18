@@ -334,6 +334,7 @@ app.get("/api/finance", authMiddleware, async (req, res) => {
   }
 });
 app.post("/api/finance", authMiddleware, async (req, res) => {
+  console.log(req.body);
   try {
     const { type, amount, date, remark } = req.body;
 
