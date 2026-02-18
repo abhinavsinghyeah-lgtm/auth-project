@@ -140,13 +140,13 @@ async function login() {
   const username = document.getElementById("username").value.trim();
   const password = document.getElementById("password").value.trim();
   const errorBox = document.getElementById("loginError");
+  const loginButton = document.querySelector("button");
 
-errorBox.style.display = "none";
-errorBox.innerText = "";
+  errorBox.style.display = "none";
+  errorBox.innerText = "";
 
-document.getElementById("username").classList.remove("input-error");
-document.getElementById("password").classList.remove("input-error");
-
+  document.getElementById("username").classList.remove("input-error");
+  document.getElementById("password").classList.remove("input-error");
 
   if (!username || !password) {
     errorBox.innerText = "Please enter username and password.";
@@ -154,55 +154,37 @@ document.getElementById("password").classList.remove("input-error");
     return;
   }
 
-const loginButton = document.querySelector("button");
-loginButton.innerText = "Logging in..";
-loginButton.disabled = true;
+  loginButton.innerText = "Logging in..";
+  loginButton.disabled = true;
 
   try {
     const res = await fetch("/login", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
+      credentials: "include",   // 🔥 IMPORTANT
       body: JSON.stringify({ username, password })
     });
 
-if (res.status === 400) {
-  const text = await res.text();
-
-  errorBox.innerText = text;
-  errorBox.style.display = "block";
-
-  document.getElementById("username").classList.add("input-error");
-  document.getElementById("password").classList.add("input-error");
-
-loginButton.innerText = "Login";
-loginButton.disabled = false;
-
-  return;
-}
-
-
-    const data = await res.json();
-
-    if (data.token) {
-      localStorage.setItem("token", data.token);
-
-      const payload = JSON.parse(atob(data.token.split('.')[1]));
-
-      if (payload.role === "admin" || payload.role === "owner") {
-        window.location.href = "admin.html";
-      } else {
-        window.location.href = "user.html";
-      }
+    if (!res.ok) {
+      const text = await res.text();
+      errorBox.innerText = text;
+      errorBox.style.display = "block";
+      loginButton.innerText = "Login";
+      loginButton.disabled = false;
+      return;
     }
 
-  } catch {
+    // 🔥 Login success → cookie is set → go to protected route
+    window.location.href = "/admin";
+
+  } catch (err) {
     errorBox.innerText = "Server error. Try again.";
     errorBox.style.display = "block";
-
     loginButton.innerText = "Login";
-    loginButton.disabled = false; 
+    loginButton.disabled = false;
   }
 }
+
 
 </script>
 

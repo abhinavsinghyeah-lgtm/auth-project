@@ -79,10 +79,6 @@ async function adminMiddleware(req, res, next) {
 }
 
 
-app.get("/", (req, res) => {
-  res.send("Backend is working 🚀");
-});
-
 app.post("/test", (req, res) => {
   console.log(req.body);
   res.send("Received!");
