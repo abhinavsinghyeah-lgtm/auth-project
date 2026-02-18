@@ -46,6 +46,9 @@ mongoose.connect(process.env.MONGO_URI)
   console.log("Connection error:", error);
 });
 
+app.get("/", (req, res) => {
+  res.sendFile(path.join(__dirname, "public/index.html"));
+});
 
 
 
