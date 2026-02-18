@@ -1,4 +1,5 @@
 const cookieParser = require("cookie-parser");
+const path = require("path");
 const Overview = require("./models/Overview");
 const Whitelist = require("./models/Whitelist");
 const jwt = require("jsonwebtoken");
@@ -9,11 +10,17 @@ const express = require("express");
 const mongoose = require("mongoose");
 
 const app = express();
-app.use(cors());
+app.use(cors({
+  origin: true,
+  credentials: true
+}));
+
 
 app.use(express.json());
 app.use(cookieParser());
-app.use(express.static("public"));
+app.use(express.static("public", {
+  index: false
+}));
 
 mongoose.connect(process.env.MONGO_URI)
 .then(async () => {
@@ -44,20 +51,22 @@ mongoose.connect(process.env.MONGO_URI)
 
 
 function authMiddleware(req, res, next) {
-const token = req.cookies.token;
+  const token = req.cookies.token;
 
   if (!token) {
-    return res.status(401).send("No token provided");
+    return res.status(401).json({ message: "Unauthorized" });
   }
 
   try {
-    const decoded = jwt.verify(token, "mysecretkey");
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
     req.userId = decoded.id;
+    req.userRole = decoded.role;
     next();
   } catch (err) {
-    res.status(401).send("Invalid token");
+    return res.status(401).json({ message: "Invalid token" });
   }
 }
+
 
 async function adminMiddleware(req, res, next) {
   const user = await User.findById(req.userId);
@@ -143,16 +152,17 @@ app.post("/login", async (req, res) => {
         id: user._id, 
         role: user.role 
       },
-      "mysecretkey",
+      "process.env.JWT_SECRET",
       { expiresIn: "1h" }
     );
 
 res.cookie("token", token, {
   httpOnly: true,
-  secure: false, // true in production (https)
+  secure: process.env.NODE_ENV === "production",
   sameSite: "strict",
-  maxAge: 60 * 60 * 1000 // 1 hour
+  maxAge: 2 * 60 * 60 * 1000
 });
+
 
 res.json({ message: "Login successful" });
 
@@ -183,7 +193,15 @@ app.get("/profile", authMiddleware, async (req, res) => {
 
 
 
+app.post("/logout", (req, res) => {
+  res.clearCookie("token", {
+    httpOnly: true,
+    sameSite: "strict",
+    secure: process.env.NODE_ENV === "production"
+  });
 
+  res.json({ message: "Logged out" });
+});
 app.listen(process.env.PORT || 3000, () => {
   console.log("Server running");
 });
@@ -273,4 +291,7 @@ app.post("/logout", (req, res) => {
 fetch("/logout", { method: "POST" })
 .then(() => {
   window.location.href = "/login.html";
+});
+app.get("/admin", authMiddleware, adminMiddleware, (req, res) => {
+  res.sendFile(path.join(__dirname, "public/admin.html"));
 });

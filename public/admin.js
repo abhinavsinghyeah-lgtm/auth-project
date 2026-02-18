@@ -2372,20 +2372,15 @@ applySettings();
 
 /* LOGOUT FROM ADMIN PANEL */
 
-function logoutUser(){
-
-  // If using localStorage token
-  localStorage.removeItem("token");
-
-  // If using sessionStorage
-  sessionStorage.removeItem("token");
-
-  // Optional: clear user data
-  localStorage.removeItem("user");
-
-  // Redirect to login page
-  window.location.href = "index.html"; // change if different login page
-
+function logoutUser() {
+  fetch("/logout", {
+    method: "POST",
+    credentials: "include"
+  })
+  .then(() => {
+    window.location.href = "/login.html";
+  });
 }
+
 
 /* DONE ABOVE ^^ */

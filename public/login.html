@@ -134,23 +134,6 @@
   </div>
 
 <script>
-const existingToken = localStorage.getItem("token");
-
-if (existingToken) {
-  try {
-    const payload = JSON.parse(atob(existingToken.split('.')[1]));
-
-    if (payload.role === "admin" || payload.role === "owner") {
-      window.location.href = "admin.html";
-    } else {
-      window.location.href = "user.html";
-    }
-
-  } catch (err) {
-    // If token is broken or invalid, remove it
-    localStorage.removeItem("token");
-  }
-}
 
 async function login() {
 
