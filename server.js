@@ -151,7 +151,7 @@ app.post("/login", async (req, res) => {
         id: user._id, 
         role: user.role 
       },
-      "process.env.JWT_SECRET",
+      process.env.JWT_SECRET,
       { expiresIn: "1h" }
     );
 
@@ -280,15 +280,7 @@ app.get("/api/overview", authMiddleware, async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 });
-app.post("/logout", (req, res) => {
-  res.clearCookie("token", {
-    httpOnly: true,
-    sameSite: "strict",
-    secure: process.env.NODE_ENV === "production"
-  });
 
-  res.json({ message: "Logged out" });
-});
 
 app.get("/admin", authMiddleware, adminMiddleware, (req, res) => {
 res.sendFile(path.join(__dirname, "views/admin.html"));
