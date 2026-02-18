@@ -1,3 +1,4 @@
+const Finance = require("./models/Finance");
 const cookieParser = require("cookie-parser");
 const path = require("path");
 const Overview = require("./models/Overview");
@@ -322,3 +323,46 @@ app.get("/api/overview", authMiddleware, async (req, res) => {
 app.get("/admin", authMiddleware, adminMiddleware, (req, res) => {
 res.sendFile(path.join(__dirname, "views/admin.html"));
 });
+
+/* FINANCE BACKEND SAVE DB THINGGGS */
+app.get("/api/finance", authMiddleware, async (req, res) => {
+  try {
+    const entries = await Finance.find().sort({ date: -1 });
+    res.json(entries);
+  } catch {
+    res.status(500).json({ message: "Server error" });
+  }
+});
+app.post("/api/finance", authMiddleware, async (req, res) => {
+  try {
+    const { type, amount, date, remark } = req.body;
+
+    if (!type || !amount || !date) {
+      return res.status(400).json({ message: "Missing fields" });
+    }
+
+    const newEntry = new Finance({
+      type,
+      amount,
+      date,
+      remark
+    });
+
+    await newEntry.save();
+
+    res.json(newEntry);
+
+  } catch {
+    res.status(500).json({ message: "Server error" });
+  }
+});
+app.delete("/api/finance/:id", authMiddleware, async (req, res) => {
+  try {
+    await Finance.findByIdAndDelete(req.params.id);
+    res.json({ message: "Deleted" });
+  } catch {
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
+/* FINANCE DB THING ENDS HERE*/z
