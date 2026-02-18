@@ -232,7 +232,32 @@ container.innerHTML = `
 </div>
 `;
 
-renderFinance();
+fetchFinanceEntries();
+}
+async function fetchFinanceEntries() {
+  try {
+    const res = await fetch("/api/finance", {
+      credentials: "include"
+    });
+
+    if (!res.ok) {
+      alert("Failed to load finance data");
+      return;
+    }
+
+    const data = await res.json();
+
+    // Convert date strings to Date objects
+    financeEntries = data.map(entry => ({
+      ...entry,
+      date: new Date(entry.date)
+    }));
+
+    renderFinance();
+
+  } catch (err) {
+    console.error("Finance fetch error:", err);
+  }
 }
 
 function setPeriod(period){
@@ -244,33 +269,50 @@ event.target.classList.add("active");
 renderFinance();
 }
 
-function addFinanceEntry(){
+async function addFinanceEntry(){
 
-const type = document.getElementById("financeType").value;
-const amount = parseFloat(document.getElementById("financeAmount").value);
-const date = document.getElementById("financeDate").value;
-const remark = document.getElementById("financeRemark").value;
+  const type = document.getElementById("financeType").value;
+  const amount = parseFloat(document.getElementById("financeAmount").value);
+  const date = document.getElementById("financeDate").value;
+  const remark = document.getElementById("financeRemark").value;
 
-if(!amount || !date){
-alert("Please fill amount and date");
-return;
+  if(!amount || !date){
+    alert("Please fill amount and date");
+    return;
+  }
+
+  try {
+
+    const res = await fetch("/api/finance", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify({
+        type,
+        amount,
+        date,
+        remark
+      })
+    });
+
+    if (!res.ok) {
+      alert("Failed to save entry");
+      return;
+    }
+
+    // Reload entries from backend
+    await fetchFinanceEntries();
+
+    // Clear fields
+    document.getElementById("financeAmount").value = "";
+    document.getElementById("financeDate").value = "";
+    document.getElementById("financeRemark").value = "";
+
+  } catch (err) {
+    console.error("Add finance error:", err);
+  }
 }
 
-financeEntries.push({
-id: Date.now(),
-type,
-amount,
-date: new Date(date),
-remark
-});
-
-// Clear fields
-document.getElementById("financeAmount").value = "";
-document.getElementById("financeDate").value = "";
-document.getElementById("financeRemark").value = "";
-
-renderFinance();
-}
 
 function filterEntriesByPeriod(){
 
