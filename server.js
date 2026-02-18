@@ -292,5 +292,5 @@ app.post("/logout", (req, res) => {
 });
 
 app.get("/admin", authMiddleware, adminMiddleware, (req, res) => {
-  res.sendFile(path.join(__dirname, "public/admin.html"));
+res.sendFile(path.join(__dirname, "views/admin.html"));
 });
