@@ -365,4 +365,4 @@ app.delete("/api/finance/:id", authMiddleware, async (req, res) => {
   }
 });
 
-/* FINANCE DB THING ENDS HERE*/z
+/* FINANCE DB THING ENDS HERE*/
