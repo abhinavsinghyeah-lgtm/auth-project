@@ -376,6 +376,14 @@ const row = `
 <td>${e.date.toLocaleString()}</td>
 <td>₹${e.amount}</td>
 <td>${e.remark || "-"}</td>
+<td>
+  <button onclick="deleteFinanceEntry('${entry._id}')">
+    Delete
+  </button>
+</td>
+<button onclick="editFinanceEntry('${entry._id}')">
+  Edit
+</button>
 </tr>
 `;
 
@@ -385,6 +393,41 @@ if(e.type==="sale") salesTable.innerHTML+=row;
 });
 }
 
+async function editFinanceEntry(id) {
+
+  const entry = financeEntries.find(e => e._id === id);
+
+  if (!entry) return;
+
+  const newAmount = prompt("Enter new amount:", entry.amount);
+  if (!newAmount) return;
+
+  const newRemark = prompt("Enter new remark:", entry.remark || "");
+
+  try {
+    const res = await fetch(`/api/finance/${id}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify({
+        type: entry.type,
+        amount: parseFloat(newAmount),
+        date: entry.date,
+        remark: newRemark
+      })
+    });
+
+    if (!res.ok) {
+      alert("Failed to update");
+      return;
+    }
+
+    await fetchFinanceEntries();
+
+  } catch (err) {
+    console.error("Edit error:", err);
+  }
+}
 
 
 function renderFinanceCharts(sales,expenses,profit){
@@ -673,6 +716,27 @@ scales:{y:{beginAtZero:true}}
 }
 
 
+async function deleteFinanceEntry(id) {
+
+  if (!confirm("Are you sure you want to delete this entry?")) return;
+
+  try {
+    const res = await fetch(`/api/finance/${id}`, {
+      method: "DELETE",
+      credentials: "include"
+    });
+
+    if (!res.ok) {
+      alert("Failed to delete entry");
+      return;
+    }
+
+    await fetchFinanceEntries();
+
+  } catch (err) {
+    console.error("Delete error:", err);
+  }
+}
 
 /* ================= ------------------------  ================= */
 
@@ -2428,3 +2492,9 @@ function logoutUser() {
 
 
 /* DONE ABOVE ^^ */
+
+document.addEventListener("DOMContentLoaded", () => {
+  fetchFinanceEntries();
+});
+
+/* bhang bhosda */

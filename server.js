@@ -365,5 +365,21 @@ app.delete("/api/finance/:id", authMiddleware, async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 });
+app.put("/api/finance/:id", authMiddleware, async (req, res) => {
+  try {
+    const { type, amount, date, remark } = req.body;
+
+    const updated = await Finance.findByIdAndUpdate(
+      req.params.id,
+      { type, amount, date, remark },
+      { new: true }
+    );
+
+    res.json(updated);
+
+  } catch {
+    res.status(500).json({ message: "Server error" });
+  }
+});
 
 /* FINANCE DB THING ENDS HERE*/
