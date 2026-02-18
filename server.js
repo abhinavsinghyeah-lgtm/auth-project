@@ -281,17 +281,16 @@ app.get("/api/overview", authMiddleware, async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 });
-app.get("/admin", authMiddleware, adminMiddleware, (req, res) => {
-  res.sendFile(__dirname + "/public/admin.html");
-});
 app.post("/logout", (req, res) => {
-  res.clearCookie("token");
+  res.clearCookie("token", {
+    httpOnly: true,
+    sameSite: "strict",
+    secure: process.env.NODE_ENV === "production"
+  });
+
   res.json({ message: "Logged out" });
 });
-fetch("/logout", { method: "POST" })
-.then(() => {
-  window.location.href = "/login.html";
-});
+
 app.get("/admin", authMiddleware, adminMiddleware, (req, res) => {
   res.sendFile(path.join(__dirname, "public/admin.html"));
 });
