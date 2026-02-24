@@ -1,160 +1,184 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-<meta charset="UTF-8">
-<title>RYVEN Control</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-<!-- Chart.js -->
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
-<style>
-
-</style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RYVEN - Architect Premium SaaS Control</title>
+  <!-- Tailwind CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- ApexCharts CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+  <!-- Quill CDN -->
+  <link href="https://cdn.jsdelivr.net/npm/quill@2.0.2/dist/quill.snow.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/quill@2.0.2/dist/quill.js"></script>
+  <!-- Custom Styles -->
+  <link rel="stylesheet" href="/styles.css">
 </head>
-<link rel="stylesheet" href="/styles.css">
+<body class="theme-light min-h-screen bg-gray-50 font-sans">
+  <div class="flex">
+    <!-- Sidebar -->
+    <aside class="w-64 bg-white shadow-md h-screen p-4 fixed">
+      <h1 class="text-2xl font-bold mb-6">RYVEN</h1>
+      <nav>
+        <ul>
+          <li><button onclick="showSection('overview')" class="w-full text-left py-2 px-4 hover:bg-gray-100">Overview</button></li>
+          <li><button onclick="showSection('finance')" class="w-full text-left py-2 px-4 hover:bg-gray-100">Finance</button></li>
+          <li><button onclick="showSection('users')" class="w-full text-left py-2 px-4 hover:bg-gray-100">Users</button></li>
+          <li><button onclick="showSection('suppliers')" class="w-full text-left py-2 px-4 hover:bg-gray-100">Suppliers</button></li>
+          <li><button onclick="showSection('inventory')" class="w-full text-left py-2 px-4 hover:bg-gray-100">Inventory</button></li>
+          <li><button onclick="showSection('schedule')" class="w-full text-left py-2 px-4 hover:bg-gray-100">Schedule</button></li>
+          <li><button onclick="showSection('notes')" class="w-full text-left py-2 px-4 hover:bg-gray-100">Notes</button></li>
+          <li><button onclick="showSection('settings')" class="w-full text-left py-2 px-4 hover:bg-gray-100">Settings</button></li>
+        </ul>
+      </nav>
+      <button onclick="logout()" class="mt-auto w-full bg-red-500 text-white py-2 rounded">Logout</button>
+    </aside>
 
-<body>
-<script src="https://unpkg.com/lucide@latest"></script>
-<div class="wrapper">
+    <!-- Main Content -->
+    <main class="ml-64 p-8 w-full">
+      <section id="overview" class="section">
+        <h2 class="text-3xl font-bold mb-4">Overview</h2>
+        <div class="grid grid-cols-4 gap-4 mb-6">
+          <div class="bg-white p-4 rounded shadow">Total Revenue: <span id="total-revenue"></span></div>
+          <div class="bg-white p-4 rounded shadow">Total Expenses: <span id="total-expenses"></span></div>
+          <div class="bg-white p-4 rounded shadow">Net Profit: <span id="net-profit"></span></div>
+          <div class="bg-white p-4 rounded shadow">Active Users: <span id="active-users"></span></div>
+        </div>
+        <div class="grid grid-cols-2 gap-4 mb-6">
+          <div id="revenue-chart" class="bg-white p-4 rounded shadow"></div>
+          <div id="profit-chart" class="bg-white p-4 rounded shadow"></div>
+        </div>
+        <h3 class="text-xl mb-2">Next 7 Days Schedule</h3>
+        <div id="schedule-glimpse" class="bg-white p-4 rounded shadow"></div>
+        <div id="low-stock-alerts" class="mt-4"></div>
+      </section>
 
-<!-- ================= SIDEBAR ================= -->
+      <section id="finance" class="section hidden">
+        <h2 class="text-3xl font-bold mb-4">Finance</h2>
+        <div class="grid grid-cols-2 gap-4 mb-6">
+          <div id="finance-revenue-chart" class="bg-white p-4 rounded shadow"></div>
+          <div id="finance-profit-chart" class="bg-white p-4 rounded shadow"></div>
+        </div>
+        <form id="finance-form" class="bg-white p-4 rounded shadow mb-6">
+          <select name="type" class="p-2 border">
+            <option value="expense">Expense</option>
+            <option value="sale">Sale</option>
+          </select>
+          <input name="amount" type="number" placeholder="Amount" class="p-2 border">
+          <input name="date" type="date" class="p-2 border">
+          <input name="remark" placeholder="Remark" class="p-2 border">
+          <select name="category" class="p-2 border">
+            <option>Marketing</option>
+            <option>Supplies</option>
+            <option>Salary</option>
+            <option>Other</option>
+          </select>
+          <button type="submit" class="bg-blue-500 text-white p-2 rounded">Add Entry</button>
+        </form>
+        <input id="finance-search" placeholder="Search" class="p-2 border mb-4">
+        <table class="w-full bg-white rounded shadow">
+          <thead><tr><th>Type</th><th>Amount</th><th>Date</th><th>Remark</th><th>Category</th><th>Actions</th></tr></thead>
+          <tbody id="finance-table"></tbody>
+        </table>
+        <div id="finance-pagination"></div>
+        <button onclick="exportToCSV('finance')" class="bg-green-500 text-white p-2 rounded mt-4">Export to CSV</button>
+      </section>
 
-<div class="sidebar" id="sidebar">
+      <section id="users" class="section hidden">
+        <h2 class="text-3xl font-bold mb-4">Users</h2>
+        <input id="users-search" placeholder="Search" class="p-2 border mb-4">
+        <table class="w-full bg-white rounded shadow">
+          <thead><tr><th>Username</th><th>Role</th><th>Status</th><th>Created</th><th>Actions</th></tr></thead>
+          <tbody id="users-table"></tbody>
+        </table>
+        <div id="users-pagination"></div>
+        <h3 class="text-xl mt-6 mb-2">Activity Logs</h3>
+        <table class="w-full bg-white rounded shadow">
+          <thead><tr><th>User</th><th>Action</th><th>Date</th></tr></thead>
+          <tbody id="logs-table"></tbody>
+        </table>
+      </section>
 
-<div class="logo" id="logoText">RYVEN</div>
+      <section id="suppliers" class="section hidden">
+        <h2 class="text-3xl font-bold mb-4">Suppliers</h2>
+        <form id="supplier-form" class="bg-white p-4 rounded shadow mb-6">
+          <input name="name" placeholder="Name" class="p-2 border">
+          <input name="contact" placeholder="Contact" class="p-2 border">
+          <input name="address" placeholder="Address" class="p-2 border">
+          <select name="activityLevel" class="p-2 border">
+            <option>high</option>
+            <option>medium</option>
+            <option>low</option>
+          </select>
+          <button type="submit" class="bg-blue-500 text-white p-2 rounded">Add Supplier</button>
+        </form>
+        <input id="suppliers-search" placeholder="Search" class="p-2 border mb-4">
+        <table class="w-full bg-white rounded shadow">
+          <thead><tr><th>Name</th><th>Contact</th><th>Address</th><th>Activity</th><th>Payments</th><th>Actions</th></tr></thead>
+          <tbody id="suppliers-table"></tbody>
+        </table>
+        <div id="suppliers-pagination"></div>
+      </section>
 
-<div class="nav-item active" onclick="showModule('overview')">
-<i data-lucide="layout-dashboard"></i>
-<path d="M3 13h8V3H3zM13 21h8v-8h-8zM13 3v8h8"/>
-</svg>
-<span class="nav-text">Overview</span>
-<span class="tooltip">Overview</span>
-</div>
+      <section id="inventory" class="section hidden">
+        <h2 class="text-3xl font-bold mb-4">Inventory</h2>
+        <div class="grid grid-cols-4 gap-4 mb-6">
+          <div class="bg-white p-4 rounded shadow">Total Products: <span id="total-products"></span></div>
+          <div class="bg-white p-4 rounded shadow">Total Stock: <span id="total-stock"></span></div>
+          <div class="bg-white p-4 rounded shadow">Inventory Value: <span id="inventory-value"></span></div>
+          <div class="bg-white p-4 rounded shadow">Total Profit: <span id="total-profit"></span></div>
+        </div>
+        <form id="inventory-form" class="bg-white p-4 rounded shadow mb-6">
+          <input name="name" placeholder="Name" class="p-2 border">
+          <input name="stock" type="number" placeholder="Stock" class="p-2 border">
+          <input name="cost" type="number" placeholder="Cost" class="p-2 border">
+          <input name="sellPrice" type="number" placeholder="Sell Price" class="p-2 border">
+          <input name="margin" type="number" placeholder="Margin %" class="p-2 border">
+          <input name="profit" type="number" placeholder="Profit" class="p-2 border">
+          <button type="submit" class="bg-blue-500 text-white p-2 rounded">Add Product</button>
+        </form>
+        <input id="inventory-search" placeholder="Search" class="p-2 border mb-4">
+        <table class="w-full bg-white rounded shadow">
+          <thead><tr><th>Name</th><th>Stock</th><th>Cost</th><th>Sell</th><th>Margin</th><th>Profit</th><th>Actions</th></tr></thead>
+          <tbody id="inventory-table"></tbody>
+        </table>
+        <div id="inventory-pagination"></div>
+        <div id="inventory-alerts" class="mt-4"></div>
+      </section>
 
-<div class="nav-item" onclick="showModule('finance')">
-<i data-lucide="trending-up"></i>
-<path d="M12 1v22M5 5h14M5 19h14"/>
-</svg>
-<span class="nav-text">Finance</span>
-<span class="tooltip">Finance</span>
-</div>
+      <section id="schedule" class="section hidden">
+        <h2 class="text-3xl font-bold mb-4">Schedule</h2>
+        <div class="grid grid-cols-3 gap-4">
+          <div id="schedule-days"></div>
+        </div>
+      </section>
 
-<div class="nav-item" onclick="showModule('users', this)">
-<i data-lucide="users"></i>
-<path d="M16 11a4 4 0 1 0-8 0"/>
-<path d="M12 14c-4 0-8 2-8 6h16c0-4-4-6-8-6z"/>
-</svg>
-<span class="nav-text">Users</span>
-<span class="tooltip">Users</span>
-</div>
+      <section id="notes" class="section hidden">
+        <h2 class="text-3xl font-bold mb-4">Notes</h2>
+        <button onclick="showNoteForm()" class="bg-blue-500 text-white p-2 rounded mb-4">New Note</button>
+        <div id="note-form" class="hidden bg-white p-4 rounded shadow mb-6">
+          <input id="note-title" placeholder="Title" class="p-2 border w-full mb-2">
+          <div id="note-editor" class="h-40"></div>
+          <button onclick="saveNote()" class="bg-blue-500 text-white p-2 rounded mt-2">Save</button>
+        </div>
+        <div id="notes-list"></div>
+      </section>
 
-<div class="nav-item" onclick="showModule('suppliers')">
-<i data-lucide="Handshake"></i>
-<path d="M3 7h18M3 12h18M3 17h18"/>
-</svg>
-<span class="nav-text">Suppliers</span>
-<span class="tooltip">Suppliers</span>
-</div>
-
-<div class="nav-item" onclick="showModule('inventory')">
-<i data-lucide="package"></i>
-<path d="M4 4h16v16H4z"/>
-</svg>
-<span class="nav-text">Inventory</span>
-<span class="tooltip">Inventory</span>
-</div>
-
-<div class="nav-item" onclick="showModule('schedule')">
-<i data-lucide="calendar"></i>
-<circle cx="12" cy="12" r="3"/>
-</svg>
-<span class="nav-text">Schedule</span>
-<span class="tooltip">Schedule</span>
-</div>
-
-<div class="nav-item" onclick="showModule('notes')">
-<i data-lucide="file-text"></i>
-<path d="M4 4h16v16H4z"/>
-</svg>
-<span class="nav-text">Notes</span>
-<span class="tooltip">Notes</span>
-</div>
-
-<div class="nav-item" onclick="showModule('settings')">
-<i data-lucide="settings"></i>
-<circle cx="12" cy="12" r="3"/>
-</svg>
-<span class="nav-text">Settings</span>
-<span class="tooltip">Settings</span>
-</div>
-
-</div>
-
-<!-- ================= MAIN ================= -->
-
-<div class="main">
-
-<div class="header">
-<div style="cursor:pointer" onclick="toggleSidebar()">☰</div>
-<div>Architect Premium SaaS Control</div>
-<button class="logout-btn" onclick="logoutUser()">
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-    <path d="M10 17l5-5-5-5"/>
-    <path d="M15 12H3"/>
-    <path d="M21 3v18"/>
-  </svg>
-  Logout
-</button>
-</div>
-
-<div class="content fade" id="moduleContent">
-
-<!-- Default Overview will load here -->
-
-</div>
-
-</div>
-</div>
-
-<script>
-
-
-
-</script>
-
-<div id="ultraDeleteOverlay" class="ultra-delete-overlay">
-  <div class="ultra-delete-box">
-
-    <div class="ultra-delete-icon">⚠</div>
-
-    <div class="ultra-delete-title">
-      Delete Note
-    </div>
-
-    <div class="ultra-delete-text">
-      Your note will be permanently deleted.
-      This action cannot be undone.
-    </div>
-
-    <div class="ultra-delete-actions">
-      <button class="ultra-cancel-btn"
-        onclick="closeUltraDelete()">
-        Cancel
-      </button>
-
-      <button id="ultraConfirmDeleteBtn"
-        class="ultra-delete-btn">
-        Delete
-      </button>
-    </div>
-
+      <section id="settings" class="section hidden">
+        <h2 class="text-3xl font-bold mb-4">Settings</h2>
+        <div class="bg-white p-4 rounded shadow">
+          <h3 class="text-xl mb-2">Theme</h3>
+          <select id="theme-select" class="p-2 border">
+            <option value="light">Light (White)</option>
+            <option value="dark">Dark (Black)</option>
+            <option value="blue">Blue (Dark Blue)</option>
+          </select>
+          <button onclick="updateTheme()" class="bg-blue-500 text-white p-2 rounded ml-2">Apply</button>
+        </div>
+      </section>
+    </main>
   </div>
-</div>
-<script>
-lucide.createIcons();
-</script>
-<script src="/admin.js"></script>
 
+  <script src="/app.js"></script>
 </body>
 </html>

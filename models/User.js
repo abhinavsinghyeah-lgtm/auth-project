@@ -18,7 +18,12 @@ const userSchema = new mongoose.Schema({
   },
   lastLogin: {
     type: Date
+  },
+  theme: { // New field for theme persistence
+    type: String,
+    enum: ["light", "dark", "blue"],
+    default: "light"
   }
-}, { timestamps: true }); // THIS ADDS createdAt & updatedAt
+}, { timestamps: true });
 
 module.exports = mongoose.model("User", userSchema);

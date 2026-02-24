@@ -1,11 +1,7 @@
 const mongoose = require("mongoose");
 
 const whitelistSchema = new mongoose.Schema({
-  username: {
-    type: String,
-    required: true,
-    unique: true
-  }
+  username: { type: String, unique: true }
 });
 
 module.exports = mongoose.model("Whitelist", whitelistSchema);
